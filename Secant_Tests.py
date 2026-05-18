@@ -32,6 +32,7 @@ class parentTest:
                         return(t[0]*math.log(x, t[2]) - t[1]) # do not change order of t vars
                     case 2:
                         return(t[0]*t[2]**x - t[1]) # do not change order of t vars
+        return(0)
 
 
     # returns xi0 and xi1 do not put in 0 for t[0]
@@ -110,36 +111,52 @@ class parentTest:
         if preMade:
             calling = []
             if len(calling) == 0:
-                for i in range(len(functions)):
-                    for k in range(1, 3):
-                        initBE = initFE = endFE = endBE = 1000
-                        stepCount = {}
-                        if k == 1 and (functions[i][0] == 1 or (functions[i][0] == 2 and functions[i][1] == 1)):
-                            continue
-                        for j in range(1, times):
-                            if (functions[i][0] != 2 and functions[i][1] < 3):
-                                if k == 1:
-                                    t = [1, j, 2]
-                                else:
-                                    t = [j, 1, 2]
-                            else:
-                                t = [j, j, 2]
-                            initGuess = self.offsetCalc(t, functions[i][0], functions[i][1], functions[i][2])
-                            results = self.singleTest(initGuess[0], initGuess[1], times, functions[i], t)
-                            rootApx = results[0]
-                            if results[1] in stepCount.keys():
-                                stepCount.update({results[1]:stepCount[results[1]] + 1})
-                            else:
-                                stepCount.update({results[1]:1})
-                            if j == 1 and not(functions[i][0] == 1 and functions[i][1] > 2 and rootApx == 0):
-                                initBE = self.functionOfX(rootApx, t, functions[i][0], functions[i][1], functions[i][2])
-                                initFE = rootApx - (self.offsetCalc(t, functions[i][0], functions[i][1], functions[i][2])[0] + 1)
-                        if not(functions[i][0] == 2 and functions[i][1] == 1 and rootApx <= 0):
-                            endBE = self.functionOfX(rootApx, t, functions[i][0], functions[i][1], functions[i][2])
+                self.batchloop(functions)
+            else:
+                self.batchloop(functions, calling)
+        else:
+            funcs = input("how many functions do you want to test?\n")
+            calling = []
+            for i in range(funcs):
+                nextFunc = []
+                nextFunc.append(input("function group: \n"))
+                nextFunc.append(input("function subcase: \n"))
+                nextFunc.append(input("function power: \n"))
+                calling.append(nextFunc)
+            
+
+    def batchloop(self, functions, calling = functions):
+        for i in range(len(functions)):
+            for k in range(1, 3):
+                initBE = initFE = endFE = endBE = 1000
+                stepCount = {}
+                if k == 1 and (calling[i][0] == 1 or (calling[i][0] == 2 and calling[i][1] == 1)):
+                    continue
+                for j in range(1, times):
+                    if (calling[i][0] != 2 or calling[i][1] < 3):
+                        if k == 1:
+                            t = [1, j, 2]
                         else:
-                            endBE = -1
-                        endFE = rootApx - (self.offsetCalc(t, functions[i][0], functions[i][1], functions[i][2])[0] + 1)
-                        self.finishedCalc(initBE, initFE, endBE, endFE, stepCount, functions[i])
+                            t = [j, 1, 2]
+                    else:
+                        t = [j, j, 2]
+                    initGuess = self.offsetCalc(t, calling[i][0], calling[i][1], calling[i][2])
+                    results = self.singleTest(initGuess[0], initGuess[1], times, calling[i], t)
+                    rootApx = results[0]
+                    if results[1] in stepCount.keys():
+                        stepCount.update({results[1]:stepCount[results[1]] + 1})
+                    else:
+                        stepCount.update({results[1]:1})
+                    if j == 1 and not(calling[i][0] == 1 and calling[i][1] > 2 and rootApx == 0):
+                        initBE = self.functionOfX(rootApx, t, calling[i][0], calling[i][1], calling[i][2])
+                        initFE = rootApx - (self.offsetCalc(t, calling[i][0], calling[i][1], calling[i][2])[0] + 1)
+                if not(calling[i][0] == 2 and calling[i][1] == 1 and rootApx <= 0):
+                    endBE = self.functionOfX(rootApx, t, calling[i][0], calling[i][1], calling[i][2])
+                else:
+                    endBE = -1
+                endFE = rootApx - (self.offsetCalc(t, calling[i][0], calling[i][1], calling[i][2])[0] + 1)
+                self.finishedCalc(initBE, initFE, endBE, endFE, stepCount, calling[i])
+                    
 
     #finds the secant approximation and counts the step for a particular function returns steps and approximation
     def singleTest(self, xi0, xi1, i, func, t):
