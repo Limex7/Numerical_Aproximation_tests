@@ -184,7 +184,7 @@ class parentTest:
 
 
 
-    def finishedCalc(self, iBE, iFE, eBE, eFE, sc, func):
+    def finishedCalc(self, iBE, iFE, eBE, eFE, sc, func, pr = True):
         count = sum(sc.values())
         keys = sc.keys()
         keys = list(keys)
@@ -198,8 +198,19 @@ class parentTest:
             avg += sc.get(keys[i]) * keys[i]
         avg /= count
         functionName = self.functionName(func)
-        print(str(functionName) + ": \nBackwards error Initial: " + str(iBE) + "\nForwards error Initial: " + str(iFE) + "\nBackwards error end: " + str(eBE) + "\nForwards error end: " + str(eFE) + "\navg steps: " + str(avg) + "\nmode steps: " + str(highestVal))
-        print()
+        if pr:
+            print(str(functionName) + ": \nBackwards error Initial: " + str(iBE) + "\nForwards error Initial: " + str(iFE) + "\nBackwards error end: " + str(eBE) + "\nForwards error end: " + str(eFE) + "\navg steps: " + str(avg) + "\nmode steps: " + str(highestVal))
+            print()
+        else:
+            values = ("\"" + str(functionName)  + "\"\n"+ "\"" +
+                      str(iBE) + "\",\"" + str(eBE) +  "\",\"" + str(avgBE) + "\",\"" +
+                      str(iFE) + "\",\"" + str(eFE) + "\",\"" + str(avgFE) + "\",\"" +
+                      str(lowestSteps) + "\",\"" + str(highestSteps) + "\",\"" + str(avg) + "\",\"" + str(highestVal) + "\"\n")
+            self.filestuff(values)
+
+    def filestuff(self, fileName = "data.txt", data = ""):
+        with open(fileName, "a") as f:
+            f.write(data)
 
 
 p1 = parentTest()
