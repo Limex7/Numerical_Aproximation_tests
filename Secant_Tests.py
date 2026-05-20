@@ -2,6 +2,8 @@ import math
 
 class parentTest:
 
+    createdFile = 0
+
     def __init__(self):
         self = self
 
@@ -45,7 +47,7 @@ class parentTest:
                     return [-1, .99]
             case 1:
                 if (abs(ca) <= 1 and subcase < 3) or (abs(ca) >= 1 and subcase >= 3):
-                    match subcase: # trig shifts might need to be lowered
+                    match subcase:
                         case 0:
                             root = math.asin(ca)
                         case 1:
@@ -109,9 +111,11 @@ class parentTest:
         if preMade:
             calling = []
             if len(calling) == 0:
-                self.batchloop(functions, functions, times)
+                for i in range(len(functions)):
+                    self.batchloop(functions, functions, times, i, False)
             else:
-                self.batchloop(functions, calling, times)
+                for i in range(len(calling)):
+                    self.batchloop(functions, calling, times, i)
         else:
             funcs = input("how many functions do you want? \n")
             if funcs.isdigit():
@@ -123,42 +127,75 @@ class parentTest:
                     nextFunc.append(int(input("function subcase: \n")))
                     nextFunc.append(int(input("function power: \n")))
                     calling.append(nextFunc)
-                self.batchloop(functions, calling, times)
+                for i in range(len(calling)):
+                    self.batchloop(functions, calling, times, i)
             else:
                 print("enter a number")
 
 
-    def batchloop(self, functions, calling, times):
-        for i in range(len(calling)):
-            for k in range(1, 3):
-                initBE = initFE = endFE = endBE = 1000
-                stepCount = {}
-                if k == 1 and (calling[i][0] == 1 or (calling[i][0] == 2 and calling[i][1] == 1)):
-                    continue
-                for j in range(1, times):
-                    if (calling[i][0] != 2 and calling[i][1] < 3):
-                        if k == 1:
-                            t = [1, j, 2]
-                        else:
-                            t = [j, 1, 2]
+    def batchloop(self, functions, calling, times, i, pr = True):
+        for k in range(1, 3):
+            BE = FE = initBE = initFE = endFE = endBE = 1000
+            avgBE = avgFE = 0
+            amtBEFailed = amtFEFailed = 0
+            stepCount = {}
+            if k == 1 and (calling[i][0] == 1 or (calling[i][0] == 2 and calling[i][1] == 1)):
+                continue
+            for j in range(1, times):
+                if (calling[i][0] != 2 and calling[i][1] < 3):
+                    if k == 1:
+                        t = [1, j, 2]
                     else:
-                        t = [j, j, 2]
-                    initGuess = self.offsetCalc(t, calling[i][0], calling[i][1], calling[i][2])
-                    results = self.singleTest(initGuess[0], initGuess[1], times, calling[i], t)
-                    rootApx = results[0]
-                    if results[1] in stepCount.keys():
-                        stepCount.update({results[1]: stepCount[results[1]] + 1})
-                    else:
-                        stepCount.update({results[1]: 1})
-                    if j == 1 and not (calling[i][0] == 1 and calling[i][1] > 2 and rootApx == 0):
-                        initBE = self.functionOfX(rootApx, t, calling[i][0], calling[i][1], calling[i][2])
-                        initFE = rootApx - (self.offsetCalc(t, calling[i][0], calling[i][1], calling[i][2])[0] + 1)
-                if not (calling[i][0] == 2 and calling[i][1] == 1 and rootApx <= 0):
-                    endBE = self.functionOfX(rootApx, t, calling[i][0], calling[i][1], calling[i][2])
+                        t = [j, 1, 2]
                 else:
-                    endBE = -1
-                endFE = rootApx - (self.offsetCalc(t, calling[i][0], calling[i][1], calling[i][2])[0] + 1)
-                self.finishedCalc(initBE, initFE, endBE, endFE, stepCount, calling[i])
+                    t = [j, j, 2]
+                initGuess = self.offsetCalc(t, calling[i][0], calling[i][1], calling[i][2])
+                results = self.singleTest(initGuess[0], initGuess[1], times, calling[i], t)
+                rootApx = results[0]
+                if results[1] in stepCount.keys():
+                    stepCount.update({results[1]: stepCount[results[1]] + 1})
+                else:
+                    stepCount.update({results[1]: 1})
+                invTrigCheck = not (calling[i][0] == 1 and calling[i][1] > 2 and rootApx == 0)
+                if j == 1 and invTrigCheck:
+                    initBE = self.functionOfX(rootApx, t, calling[i][0], calling[i][1], calling[i][2])
+                    initFE = rootApx - (self.offsetCalc(t, calling[i][0], calling[i][1], calling[i][2])[0] + 1)
+                elif invTrigCheck:
+                    BE = self.functionOfX(rootApx, t, calling[i][0], calling[i][1], calling[i][2])
+                    FE = rootApx - (self.offsetCalc(t, calling[i][0], calling[i][1], calling[i][2])[0] + 1)
+                if j == 1:
+                    checkedVals = self.errorCheck(initBE, initFE)
+                    avgBE += checkedVals[0]
+                    amtBEFailed += checkedVals[1]
+                    avgFE += checkedVals[2]
+                    amtFEFailed += checkedVals[3]
+                else:
+                    checkedVals = self.errorCheck(BE, FE)
+                    avgBE += checkedVals[0]
+                    amtBEFailed += checkedVals[1]
+                    avgFE += checkedVals[2]
+                    amtFEFailed += checkedVals[3]
+            if not (calling[i][0] == 2 and calling[i][1] == 1 and rootApx <= 0):
+                endBE = self.functionOfX(rootApx, t, calling[i][0], calling[i][1], calling[i][2])
+                avgBE += endBE
+            else:
+                amtBEFailed += 1
+            avgBE /= (times - 1 - amtBEFailed)
+            endFE = rootApx - (self.offsetCalc(t, calling[i][0], calling[i][1], calling[i][2])[0] + 1)
+            avgFE /= (times - 1 - amtFEFailed)
+            self.finishedCalc(initBE, initFE, avgBE, avgFE, endBE, endFE, amtBEFailed, amtFEFailed, stepCount, calling[i], pr)
+
+    def errorCheck(self, BE, FE):
+        addBE = BEFailed  = addFE = FEFailed= 0
+        if BE == 1000:
+            BEFailed = 1
+        else:
+            addBE = BE
+        if FE == 1000:
+            FEFailed = 1
+        else:
+            addFE = FE
+        return[addBE, BEFailed, addFE, FEFailed]
 
     def singleTest(self, xi0, xi1, i, func, t):
         error = 1000
@@ -168,7 +205,7 @@ class parentTest:
             noNegative = True
         else:
             noNegative = False
-        brCond = abs(error) > (.5 * 10**-10) and not (self.functionOfX(xi1, t, func[0], func[1], func[2]) - self.functionOfX(xi0, t, func[0], func[1], func[2])) == 0 and not steps > 100000
+        brCond = abs(error) > (.5 * 10**-10) and not (self.functionOfX(xi1, t, func[0], func[1], func[2]) - self.functionOfX(xi0, t, func[0], func[1], func[2])) == 0 and not steps > 1000000
         while brCond:
             if noNegative:
                 if xi0 <= 0 or xi1 <= 0:
@@ -178,41 +215,51 @@ class parentTest:
             xi1 = xi2
             error = xi1 - xi0
             steps += 1
-            brCond = abs(error) > (.5 * 10**-10) and not (self.functionOfX(xi1, t, func[0], func[1], func[2]) - self.functionOfX(xi0, t, func[0], func[1], func[2])) == 0 and not steps > 100000
+            brCond = abs(error) > (.5 * 10**-10) and not (self.functionOfX(xi1, t, func[0], func[1], func[2]) - self.functionOfX(xi0, t, func[0], func[1], func[2])) == 0 and not steps > 1000000
         return [xi2, steps]
 
 
 
 
-    def finishedCalc(self, iBE, iFE, eBE, eFE, sc, func, pr = True):
+    def finishedCalc(self, iBE, iFE, aBE, aFE, eBE, eFE, tfBE, tfFE, sc, func, pr = True):
         count = sum(sc.values())
         keys = sc.keys()
         keys = list(keys)
-        avg = 0
-        highest = 0
-        highestVal = 0
+        avg = highest = higestVal = lowestSteps = highestSteps = 0
         for i in range(len(keys)):
             if sc.get(keys[i]) > highest:
                 highest = sc.get(keys[i])
                 highestVal = keys[i]
+            if keys[i] > highestSteps:
+                highestSteps = keys[i]
+            elif keys[i] < lowestSteps or lowestSteps == 0:
+                lowestSteps = keys[i]
             avg += sc.get(keys[i]) * keys[i]
         avg /= count
         functionName = self.functionName(func)
         if pr:
-            print(str(functionName) + ": \nBackwards error Initial: " + str(iBE) + "\nForwards error Initial: " + str(iFE) + "\nBackwards error end: " + str(eBE) + "\nForwards error end: " + str(eFE) + "\navg steps: " + str(avg) + "\nmode steps: " + str(highestVal))
+            print(str(functionName) + ": \nBackwards error Initial: " + str(iBE) + "\nForwards error Initial: " + str(
+                iFE) + "\nBackwards error end: " + str(eBE) + "\nForwards error end: " + str(
+                eFE) + "\navg steps: " + str(avg) + "\nmode steps: " + str(highestVal))
             print()
         else:
-            values = ("\"" + str(functionName)  + "\"\n"+ "\"" +
-                      str(iBE) + "\",\"" + str(eBE) +  "\",\"" + str(avgBE) + "\",\"" +
-                      str(iFE) + "\",\"" + str(eFE) + "\",\"" + str(avgFE) + "\",\"" +
-                      str(lowestSteps) + "\",\"" + str(highestSteps) + "\",\"" + str(avg) + "\",\"" + str(highestVal) + "\"\n")
-            self.filestuff(values)
+            values = ("\"" + str(functionName) + "\"\n" + "\"" +
+                      str(iBE) + "\",\"" + str(eBE) + "\",\"" + str(aBE) + "\",\"" + str(tfBE) + "\",\"" +
+                      str(iFE) + "\",\"" + str(eFE) + "\",\"" + str(aFE) + "\",\"" + str(tfFE) + "\",\"" +
+                      str(lowestSteps) + "\",\"" + str(highestSteps) + "\",\"" + str(avg) + "\",\"" + str(
+                        highestVal) + "\"\n")
+            self.filestuff("data.csv", values)
 
-    def filestuff(self, fileName = "data.txt", data = ""):
+    def filestuff(self, fileName="data.txt", data=""):
+        if self.createdFile == 0:
+            with open(fileName, "w") as f:
+                f.write("")
+            self.createdFile = 1
         with open(fileName, "a") as f:
             f.write(data)
 
 
 p1 = parentTest()
 p1.batchTest()
+
 
