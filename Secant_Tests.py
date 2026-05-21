@@ -2,7 +2,7 @@ import math
 
 class parentTest:
 
-    createdFile = 0
+    createdFile = [0, 0]
 
     def __init__(self):
         self = self
@@ -112,7 +112,7 @@ class parentTest:
             calling = []
             if len(calling) == 0:
                 for i in range(len(functions)):
-                    self.batchloop(functions, functions, times, i, False)
+                    self.batchloop(functions, functions, times, i, False, "a")
             else:
                 for i in range(len(calling)):
                     self.batchloop(functions, calling, times, i)
@@ -133,7 +133,12 @@ class parentTest:
                 print("enter a number")
 
 
-    def batchloop(self, functions, calling, times, i, pr = True):
+    def batchloop(self, functions, calling, times, i, pr = True, store = ""):
+        BEdata = ""
+        FEdata = ""
+        if store == "a":
+            data = self.functionName(calling[i])
+            self.filestuff("allStuff.csv", data, store)
         for k in range(1, 3):
             BE = FE = initBE = initFE = endFE = endBE = 1000
             avgBE = avgFE = 0
@@ -160,9 +165,15 @@ class parentTest:
                 if j == 1 and invTrigCheck:
                     initBE = self.functionOfX(rootApx, t, calling[i][0], calling[i][1], calling[i][2])
                     initFE = rootApx - (self.offsetCalc(t, calling[i][0], calling[i][1], calling[i][2])[0] + 1)
+                    if store == "a":
+                        BEdata += "\"" + str(initBE) + "\""
+                        FEdata += "\"" + str(initFE) + "\""
                 elif invTrigCheck:
                     BE = self.functionOfX(rootApx, t, calling[i][0], calling[i][1], calling[i][2])
                     FE = rootApx - (self.offsetCalc(t, calling[i][0], calling[i][1], calling[i][2])[0] + 1)
+                    if store == "a":
+                        BEdata += ",\"" + str(BE) + "\""
+                        FEdata += ",\"" + str(FE) + "\""
                 if j == 1:
                     checkedVals = self.errorCheck(initBE, initFE)
                     avgBE += checkedVals[0]
@@ -183,6 +194,11 @@ class parentTest:
             avgBE /= (times - 1 - amtBEFailed)
             endFE = rootApx - (self.offsetCalc(t, calling[i][0], calling[i][1], calling[i][2])[0] + 1)
             avgFE /= (times - 1 - amtFEFailed)
+            if store == "a":
+                BEdata += ",\"" + str(endBE) + "\""
+                FEdata += ",\"" + str(endFE) + "\""
+                data = "\"" + str(self.functionName(calling[i])) + "\"\n" + BEdata + "\n" + FEdata + "\n"
+                self.filestuff("allValues.csv", data, store)
             self.finishedCalc(initBE, initFE, avgBE, avgFE, endBE, endFE, amtBEFailed, amtFEFailed, stepCount, calling[i], pr)
 
     def errorCheck(self, BE, FE):
@@ -196,6 +212,37 @@ class parentTest:
         else:
             addFE = FE
         return[addBE, BEFailed, addFE, FEFailed]
+
+
+    # make a version to test changes in base for a^x also doesn't work for trig functions
+    def fullLoop(self, functions, calling, times, i, pr = True):
+        if calling[i][0] == 1:
+            changeBound = True
+        else:
+            changeBound = False
+        for j in range(1, 1000):
+            initBE = initFE = endFE = endBE = 1000
+            stepCount = {}
+            for k in range(1, 1000):
+                if changeBound and k > j:
+                    break
+                t = [j, k, 2]
+                initGuess = self.offsetCalc(t, calling[i][0], calling[i][1], calling[i][2])
+                results = self.singleTest(initGuess[0], initGuess[1], times, calling[i], t)
+                rootApx = results[0]
+                if results[1] in stepCount.keys():
+                    stepCount.update({results[1] : stepCount[results[1]] + 1})
+                else:
+                    stepCount.update({results[1]: 1})
+                if k == 1 and not (calling[i][0] == 1 and calling[i][1] > 2 and rootApx == 0):
+                    initBE = self.functionOfX(rootApx, t, calling[i][0], calling[i][1], calling[i][2])
+                    initFE = rootApx - (self.offsetCalc(t, calling[i][0], calling[i][1], calling[i][2])[0] + 1)
+            if not (calling[i][0] == 2 and calling[i][1] == 1 and rootApx <= 0):
+                endBE = self.functionOfX(rootApx, t, calling[i][0], calling[i][1], calling[i][2])
+            else:
+                endBE = -1
+            endFE = rootApx - (self.offsetCalc(t, calling[i][0], calling[i][1], calling[i][2])[0] + 1)
+            self.finishedCalc(initBE, initFE, 1, 1, endBE, endFE, 1, 1, stepCount, calling[i], pr)
 
     def singleTest(self, xi0, xi1, i, func, t):
         error = 1000
@@ -250,11 +297,15 @@ class parentTest:
                         highestVal) + "\"\n")
             self.filestuff("data.csv", values)
 
-    def filestuff(self, fileName="data.txt", data=""):
-        if self.createdFile == 0:
+    def filestuff(self, fileName="data.txt", data="", store = ""):
+        if self.createdFile[0] == 0 and store != "a":
             with open(fileName, "w") as f:
                 f.write("")
-            self.createdFile = 1
+            self.createdFile[0] = 1
+        elif self.createdFile[1] == 0 and store == "a":
+            with open(fileName, "w") as f:
+                f.write("")
+            self.createdFile[1] = 1
         with open(fileName, "a") as f:
             f.write(data)
 
