@@ -136,9 +136,10 @@ class parentTest:
     def batchloop(self, functions, calling, times, i, pr = True, store = ""):
         BEdata = ""
         FEdata = ""
+        stepData = ""
         if store == "a":
-            data = self.functionName(calling[i])
-            self.filestuff("allStuff.csv", data, store)
+            data = ""
+            self.filestuff("allValues.csv", data, store)
         for k in range(1, 3):
             BE = FE = initBE = initFE = endFE = endBE = 1000
             avgBE = avgFE = 0
@@ -161,6 +162,10 @@ class parentTest:
                     stepCount.update({results[1]: stepCount[results[1]] + 1})
                 else:
                     stepCount.update({results[1]: 1})
+                if j == 1 and store == "a":
+                    stepData += "\"" + str(results[1]) + "\""
+                elif store == "a":
+                    stepData += ",\"" + str(results[1]) + "\""
                 invTrigCheck = not (calling[i][0] == 1 and calling[i][1] > 2 and rootApx == 0)
                 if j == 1 and invTrigCheck:
                     initBE = self.functionOfX(rootApx, t, calling[i][0], calling[i][1], calling[i][2])
@@ -197,7 +202,7 @@ class parentTest:
             if store == "a":
                 BEdata += ",\"" + str(endBE) + "\""
                 FEdata += ",\"" + str(endFE) + "\""
-                data = "\"" + str(self.functionName(calling[i])) + "\"\n" + BEdata + "\n" + FEdata + "\n"
+                data = "\"" + str(self.functionName(calling[i])) + "\"\n" + BEdata + "\n" + FEdata + "\n" + stepData + "\n"
                 self.filestuff("allValues.csv", data, store)
             self.finishedCalc(initBE, initFE, avgBE, avgFE, endBE, endFE, amtBEFailed, amtFEFailed, stepCount, calling[i], pr)
 
@@ -312,5 +317,3 @@ class parentTest:
 
 p1 = parentTest()
 p1.batchTest()
-
-
