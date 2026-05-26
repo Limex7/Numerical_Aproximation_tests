@@ -115,7 +115,7 @@ class parentTest:
                     self.batchloop(functions, functions, times, i)
             else:
                 for i in range(len(calling)):
-                    self.fullLoop(functions, calling, times, i, True, "a")
+                    self.batchloop(functions, calling, times, i, True, "a")
         else:
             funcs = input("how many functions do you want? \n")
             if funcs.isdigit():
@@ -193,15 +193,13 @@ class parentTest:
             if not (calling[i][0] == 2 and calling[i][1] == 1 and rootApx <= 0):
                 endBE = self.functionOfX(rootApx, t, calling[i][0], calling[i][1], calling[i][2])
                 avgBE += endBE
-            else: 
+            else:
                 amtBEFailed += 1
             avgBE /= (times - 1 - amtBEFailed)
             endFE = rootApx - (self.offsetCalc(t, calling[i][0], calling[i][1], calling[i][2])[0] + 1)
             avgFE += endFE
             avgFE /= (times - 1 - amtFEFailed)
             if store == "a":
-                BEdata += ",\"" + str(endBE) + "\""
-                FEdata += ",\"" + str(endFE) + "\""
                 data = "\"" + str(self.functionName(calling[i])) + "\"\n" + BEdata + "\n" + FEdata + "\n" + stepData + "\n"
                 self.filestuff("allValues.csv", data, store)
             self.finishedCalc(initBE, initFE, avgBE, avgFE, endBE, endFE, amtBEFailed, amtFEFailed, stepCount, calling[i], pr)
@@ -221,7 +219,6 @@ class parentTest:
 
     # make a version to test changes in base for a^x also doesn't work for trig functions
     def fullLoop(self, functions, calling, times, i, pr = True, store = ""):
-        BEdata = FEdata = stepData = ""
         if calling[i][0] == 1:
             changeBound = True
         else:
@@ -229,11 +226,12 @@ class parentTest:
         if store == "a":
             data = ""
             self.filestuff("allValues.csv", data, store)
-        for j in range(1, 1000):
+        for j in range(1, times):
             BE = FE = initBE = initFE = endFE = endBE = 1000
+            BEdata = FEdata = stepData = ""
             avgBE = avgFE = amtBEFailed = amtFEFailed = 0
             stepCount = {}
-            for k in range(1, 1000):
+            for k in range(1, times):
                 if changeBound and k > j:
                     break
                 t = [j, k, 2]
@@ -244,20 +242,17 @@ class parentTest:
                     stepCount.update({results[1] : stepCount[results[1]] + 1})
                 else:
                     stepCount.update({results[1]: 1})
-                if k == 1 and store == "a" and j <= 1:
+                if k == 1 and store == "a":
                     stepData += "\"" + str(results[1]) + "\""
-                elif store == "a":
+                else:
                     stepData += ",\"" + str(results[1]) + "\""
                 invTrigCheck = not (calling[i][0] == 1 and calling[i][1] > 2 and rootApx == 0)
                 if k == 1 and invTrigCheck:
                     initBE = self.functionOfX(rootApx, t, calling[i][0], calling[i][1], calling[i][2])
                     initFE = rootApx - (self.offsetCalc(t, calling[i][0], calling[i][1], calling[i][2])[0] + 1)
-                    if store == "a" and j <= 1:
+                    if store == "a":
                         BEdata += "\"" + str(initBE) + "\""
                         FEdata += "\"" + str(initFE) + "\""
-                    elif store == "a":
-                        BEdata += ",\"" + str(initBE) + "\""
-                        FEdata += ",\"" + str(initFE) + "\""
                 elif invTrigCheck: #change conditions to be store != ""
                     BE = self.functionOfX(rootApx, t, calling[i][0], calling[i][1], calling[i][2])
                     FE = rootApx - (self.offsetCalc(t, calling[i][0], calling[i][1], calling[i][2])[0] + 1)
@@ -274,7 +269,7 @@ class parentTest:
                    avgBE += checkedVals[0]
                    amtBEFailed += checkedVals[1]
                    avgFE += checkedVals[2]
-                   amtFEFailed += checkedVals[3] 
+                   amtFEFailed += checkedVals[3]
             if not (calling[i][0] == 2 and calling[i][1] == 1 and rootApx <= 0):
                 endBE = self.functionOfX(rootApx, t, calling[i][0], calling[i][1], calling[i][2])
                 avgBE += endBE
@@ -285,11 +280,9 @@ class parentTest:
             avgFE += endFE
             avgFE /= (times - 1 - amtFEFailed)
             if store == "a":
-                BEdata += ",\"" + str(endBE) + "\""
-                FEdata += ",\"" + str(endFE) + "\""
                 data = "\"" + str(self.functionName(calling[i])) + str(j) + "\"\n" + BEdata + "\n" + FEdata + "\n" + stepData + "\n"
                 self.filestuff("allValues.csv", data, store)
-            self.finishedCalc(initBE, initFE, 1, 1, endBE, endFE, 1, 1, stepCount, calling[i], pr)
+            self.finishedCalc(initBE, initFE, BE, FE, endBE, endFE, amtBEFailed, amtFEFailed, stepCount, calling[i], pr)
 
     def singleTest(self, xi0, xi1, i, func, t):
         error = 1000
