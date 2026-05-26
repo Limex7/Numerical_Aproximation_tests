@@ -62,7 +62,7 @@ class parentTest:
                             root = math.atan(ca**(-1))
                     return [root - 1, root + .99]
                 else:
-                    return [0, 2]
+                    return [0.01, 2.01]
             case 2:
                 if t[0] > 0:
                     match subcase:
@@ -109,13 +109,13 @@ class parentTest:
                      [1, 2, 1], [1, 3, 1], [1, 4, 1], [1, 5, 1], [2, 0, 1], [2, 1, 1],
                      [2, 2, 2]]
         if preMade:
-            calling = [[1,0,0]]
+            calling = [[1,3,0]]
             if len(calling) == 0:
                 for i in range(len(functions)):
                     self.batchloop(functions, functions, times, i)
             else:
                 for i in range(len(calling)):
-                    self.batchloop(functions, calling, times, i, True, "a")
+                    self.fullLoop(functions, calling, times, i, True, "a")
         else:
             funcs = input("how many functions do you want? \n")
             if funcs.isdigit():
@@ -284,6 +284,12 @@ class parentTest:
                 self.filestuff("allValues.csv", data, store)
             self.finishedCalc(initBE, initFE, BE, FE, endBE, endFE, amtBEFailed, amtFEFailed, stepCount, calling[i], pr)
 
+    def offsetRules(self):
+        logCheck = True
+        invTrigCheck = True
+        if func[0] == 0:
+            pass
+
     def singleTest(self, xi0, xi1, i, func, t):
         error = 1000
         xi2 = steps = 0
@@ -291,7 +297,7 @@ class parentTest:
             noNegative = True
         else:
             noNegative = False
-        brCond = abs(error) > (.5 * 10**-10) and not (self.functionOfX(xi1, t, func[0], func[1], func[2]) - self.functionOfX(xi0, t, func[0], func[1], func[2])) == 0 and not steps > 1000000
+        brCond = abs(error) > (.5 * 10**-10) and self.funcRules(xi0, xi1, func, t) and not steps > 1000000
         while brCond:
             if noNegative:
                 if xi0 <= 0 or xi1 <= 0:
@@ -301,9 +307,22 @@ class parentTest:
             xi1 = xi2
             error = xi1 - xi0
             steps += 1
-            brCond = abs(error) > (.5 * 10**-10) and not (self.functionOfX(xi1, t, func[0], func[1], func[2]) - self.functionOfX(xi0, t, func[0], func[1], func[2])) == 0 and not steps > 1000000
+            brCond = abs(error) > (.5 * 10**-10) and self.funcRules(xi0, xi1, func, t) and not steps > 1000000
         return [xi2, steps]
 
+    def funcRules(self, xi0, xi1, func, t):
+        rule1 = not (self.functionOfX(xi1, t, func[0], func[1], func[2]) - self.functionOfX(xi0, t, func[0], func[1], func[2])) == 0
+        rule2 = True
+        if func[0] == 1:
+            a = xi0 % math.pi
+            b = xi1 % math.pi
+            if func[1] == 3:
+                rule2 = a != 0 and b != 0
+            elif func[1] == 4:
+                rule2 = a != 1 and b != 1
+            elif func[1] == 5:
+                rule2 = a != 0 and b != 1
+        return rule1 and rule2
 
 
 
